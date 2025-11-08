@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Eleven Principles of Wisdom</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --navy: #0f0f1e; --gold: #d4af37; }
+        body { margin:0; min-height:100vh; background:linear-gradient(135deg,#0f0f1e 0%,#1a1a2e 100%); 
+               font-family:'Inter',sans-serif; color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+        h1 { font-family:'Playfair Display',serif; font-size:3.5rem; text-align:center; margin-bottom:2rem; }
+        .mandala { position:relative; width:90vmin; height:90vmin; max-width:800px; max-height:800px; }
+        .node { position:absolute; width:110px; height:110px; border-radius:50%; 
+                background:var(--color); color:white; display:flex; align-items:center; justify-content:center;
+                font-weight:900; font-size:1.4rem; cursor:pointer; transition:all .4s ease;
+                box-shadow:0 10px 30px rgba(0,0,0,.5); text-shadow:0 2px 4px rgba(0,0,0,.7); }
+        .node:hover { transform:scale(1.2); filter:brightness(1.3); z-index:10; }
+        .node.active { transform:scale(1.45); z-index:20; }
+        .overlay { position:fixed; inset:0; background:rgba(0,0,0,.8); display:flex; align-items:center; justify-content:center; 
+                   padding:2rem; opacity:0; visibility:hidden; transition:opacity .4s; backdrop-filter:blur(8px); }
+        .overlay.show { opacity:1; visibility:visible; }
+        .card { background:rgba(255,255,255,.97); color:#111; padding:2.5rem; border-radius:2rem; max-width:800px; 
+                 box-shadow:0 20px 60px rgba(0,0,0,.4); }
+        .card h2 { font-family:'Playfair Display',serif; font-size:2.5rem; color:#b89100; margin-bottom:1rem; }
+        .card ul { margin:1.5rem 0; padding-left:1.4rem; }
+        .card li { margin:0.8rem 0; font-size:1.1rem; line-height:1.6; }
+        .close { background:#b89100; color:white; padding:0.8rem 2rem; border:none; border-radius:50px; 
+                 font-weight:600; cursor:pointer; margin-top:1.5rem; }
+    </style>
+</head>
+<body>
+
+<h1>The Eleven Principles<br><span style="color:#d4af37">of Wisdom</span></h1>
+
+<div class="mandala" id="mandala"></div>
+
+<div class="overlay" id="overlay" onclick="this.classList.remove('show')">
+    <div class="card" onclick="event.stopPropagation()">
+        <h2 id="title"></h2>
+        <ul id="bullets"></ul>
+        <button class="close" onclick="document.getElementById('overlay').classList.remove('show')">
+            Close
+        </button>
+    </div>
+</div>
+
+<script>
+const principles = [
+    {short:"CT", title:"Critical Thinking", color:"#3B82F6", bullets:[
+        "Reasoning that holds up to challenge and stays consistent",
+        "Reduce bias via monitoring one’s own thinking",
+        "Contradiction-free conclusions"
+    ]},
+    {short:"SM", title:"Sense-Making", color:"#8B5CF6", bullets:[
+        "Creating coherent understanding from complex information",
+        "Creating a single, contradiction-free narrative",
+        "Metacognition treated as evidence",
+        "Assimilate allocentric perspectives",
+        "Decisions run on tested mental models"
+    ]},
+    {short:"SC", title:"Self-Control", color:"#10B981", bullets:[
+        "Regulating one's emotions, thoughts, and impulsive behavior",
+        "Delayed gratification as default exchange",
+        "Goal pursuit without hedonic reward",
+        "Maintain selective attention despite noise"
+    ]},
+    {short:"FA", title:"Fairness", color:"#F59E0B", bullets:[
+        "Treat people without favoritism or discrimination",
+        "Equity = contribution ± need",
+        "Engage in relational repair",
+        "Maintain reciprocity in effort",
+        "Enforce rules with universality"
+    ]},
+    {short:"IM", title:"Impartiality", color:"#6B7280", bullets:[
+        "Unbiased and objective in judgment",
+        "Anchor judgments in empirical facts",
+        "Logic survives the veil of ignorance test",
+        "Pre-mortem / steel-man / outside view",
+        "Intellectual humility rises as data falls"
+    ]},
+    {short:"CO", title:"Strength & Courage", color:"#EF4444", bullets:[
+        "Withstanding distress discomfort",
+        "Stress inoculation via graduated exposure",
+        "Anti-fragility developed through managed stressors"
+    ]},
+    {short:"AU", title:"Autonomy", color:"#059669", bullets:[
+        "Making informed, uncoerced decisions",
+        "Choices guided by eudaimonic values",
+        "Integrity overrides conformity pressure",
+        "Exercising moral agency",
+        "Harm never offloaded for gain"
+    ]},
+    {short:"SC2", title:"Self-Confidence", color:"#7C3AED", bullets:[
+        "Trust in one's own abilities, qualities, and judgment",
+        "Self-efficacy built on verifiable achievements",
+        "Successful performances fused into identity",
+        "Observed successes applied in personal performance trials",
+        "Setbacks read as skill deficits only"
+    ]},
+    {short:"PE", title:"Persistence", color:"#DC2626", bullets:[
+        "Perseverance after affect flatlines",
+        "Obstacles treated as challenges",
+        "Building momentum through consistent daily actions",
+        "Self-monitoring of Lag/Lead indicators"
+    ]},
+    {short:"MO", title:"Moderation", color:"#0891B2", bullets:[
+        "Avoidance of excess or extremes in one's behavior",
+        "Excitement maintained at ideal level",
+        "Nervous system rebounds within a few hours",
+        "Allocate resources via Pareto principle",
+        "Ego depletion detected at performance dip"
+    ]},
+    {short:"SR", title:"Self-Reflection", color:"#78350F", bullets:[
+        "Examining one's own conscious thoughts and feelings",
+        "Daily introspection",
+        "Experiences reduced to If/then conditionals",
+        "Label current emotion with one word"
+    ]}
+];
+
+const container = document.getElementById('mandala');
+const centerX = container.offsetWidth / 2;
+const centerY = container.offsetHeight / 2;
+const radius = Math.min(centerX, centerY) * 0.75;
+
+principles.forEach((p, i) => {
+    const angle = (i * 2 * Math.PI) / principles.length - Math.PI / 2;
+    const x = centerX + radius * Math.cos(angle) - 55;
+    const y = centerY + radius * Math.sin(angle) - 55;
+
+    const node = document.createElement('div');
+    node.className = 'node';
+    node.style.left = x + 'px';
+    node.style.top = y + 'px';
+    node.style.background = p.color;
+    node.textContent = p.short;
+    node.onclick = () => showDetail(p);
+    container.appendChild(node);
+});
+
+function showDetail(p) {
+    document.getElementById('title').textContent = p.title;
+    document.getElementById('bullets').innerHTML = p.bullets.map(b => `<li>${b}</li>`).join('');
+    document.querySelectorAll('.node').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.node')[principles.findIndex(x=>x.short===p.short)].classList.add('active');
+    document.getElementById('overlay').classList.add('show');
+}
+</script>
+
+</body>
+</html>
